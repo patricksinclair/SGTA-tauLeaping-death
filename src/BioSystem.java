@@ -165,18 +165,20 @@ public class BioSystem {
             //deaths
             microhabitats[i].removeNBacteria(death_allocations[i]);
             //migrations
-            if(i==0){
-                microhabitats[i].removeNBacteria(migration_allocations[i]);
-                microhabitats[i+1].addNBacteria(migration_allocations[i]);
-            }else if(i==(L-1)){
-                microhabitats[i].removeNBacteria(migration_allocations[i]);
-                microhabitats[i-1].addNBacteria(migration_allocations[i]);
-            }else{
-                int left_migrants = rand.nextInt(migration_allocations[i]);
-                int right_migrants = migration_allocations[i] - left_migrants;
-                microhabitats[i].removeNBacteria(migration_allocations[i]);
-                microhabitats[i-1].addNBacteria(left_migrants);
-                microhabitats[i+1].addNBacteria(right_migrants);
+            if(migration_allocations[i] > 0){
+                if(i==0){
+                    microhabitats[i].removeNBacteria(migration_allocations[i]);
+                    microhabitats[i+1].addNBacteria(migration_allocations[i]);
+                }else if(i==(L-1)){
+                    microhabitats[i].removeNBacteria(migration_allocations[i]);
+                    microhabitats[i-1].addNBacteria(migration_allocations[i]);
+                }else{
+                    int left_migrants = rand.nextInt(migration_allocations[i]);
+                    int right_migrants = migration_allocations[i] - left_migrants;
+                    microhabitats[i].removeNBacteria(migration_allocations[i]);
+                    microhabitats[i-1].addNBacteria(left_migrants);
+                    microhabitats[i+1].addNBacteria(right_migrants);
+                }
             }
         }
 
@@ -228,9 +230,9 @@ public class BioSystem {
 
         BioSystem bs = new BioSystem(L, S, alpha);
 
-        while(bs.time_elapsed <= duration){
+        while(bs.time_elapsed <= duration+0.2*interval){
 
-            if(bs.time_elapsed%interval < 0.0001 && !alreadyRecorded){
+            if(bs.time_elapsed%interval < 0.01 && !alreadyRecorded){
                 System.out.println("rep: "+i+"\tt: "+bs.time_elapsed);
                 t_vals[sampleCounter] = bs.time_elapsed;
                 alive_distbs[sampleCounter] = bs.getLiveSpatialDistributionArray();
@@ -244,6 +246,7 @@ public class BioSystem {
 
             bs.performAction();
         }
+
 
         return new Databox(t_vals, alive_distbs, dead_distbs, gRate_distbs);
     }
