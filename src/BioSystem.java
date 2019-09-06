@@ -202,9 +202,9 @@ public class BioSystem {
     public static void expGrad_popAndgRateDistbs(double input_alpha){
         long startTime = System.currentTimeMillis();
         int L = 500, S = 500;
-        int nSamples = 20, nReps = 32;
+        int nSamples = 40, nReps = 32;
 
-        double duration = 200.;
+        double duration = 400.;
 
         String directory_name = "results";
         String filename_alive = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-alive-distb";

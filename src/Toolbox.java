@@ -20,17 +20,17 @@ public class Toolbox {
             FileWriter fw = new FileWriter(file.getAbsoluteFile());
             BufferedWriter bw = new BufferedWriter(fw);
 
-            int string_length = 6;
+            int string_length = 15;
 
 
             // this writes a header with time and indexes
             String header_time = "#time,";
             String header_ouput = String.format("%-"+string_length+"s", header_time);
-            for(int m = 0; m < distb_vals.length-1; m++){
+            for(int m = 0; m < distb_vals[0].length-1; m++){
                 String mh_index = "mh_index = "+m+",";
                 header_ouput += String.format("%-"+string_length+"s", mh_index);
             }
-            String mh_index = "mh_index = "+(distb_vals.length-1);
+            String mh_index = "mh_index = "+(distb_vals[0].length-1);
             header_ouput += String.format("%-"+string_length+"s", mh_index);
 
             bw.write(header_ouput);
@@ -44,11 +44,11 @@ public class Toolbox {
                 String t_val = String.format("%.4E", t_vals[t]) + ",";
                 output += String.format("%-" + string_length + "s", t_val);
 
-                for(int m = 0; m < distb_vals.length - 1; m++) {
+                for(int m = 0; m < distb_vals[0].length - 1; m++) {
                     String distb_val = String.format("%.4E", distb_vals[t][m]) + ",";
                     output += String.format("%-" + string_length + "s", distb_val);
                 }
-                String distb_val = String.format("%.4E", distb_vals[t][distb_vals.length - 1]);
+                String distb_val = String.format("%.4E", distb_vals[t][distb_vals[0].length - 1]);
                 output += String.format("%-" + string_length + "s", distb_val);
 
                 bw.write(output);
