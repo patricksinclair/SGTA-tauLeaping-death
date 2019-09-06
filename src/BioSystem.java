@@ -202,7 +202,7 @@ public class BioSystem {
     public static void expGrad_popAndgRateDistbs(double input_alpha){
         long startTime = System.currentTimeMillis();
         int L = 500, S = 500;
-        int nSamples = 20, nReps = 4;
+        int nSamples = 20, nReps = 32;
 
         double duration = 200.;
 
