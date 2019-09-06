@@ -13,6 +13,7 @@ public class BioSystem {
     private int initial_pop = 100;
     private double tau = 0.01;
 
+    private int n_tau_halves = 0;
     private Random rand = new Random();
 
     public BioSystem(int L, int S, double alpha){
@@ -119,6 +120,7 @@ public class BioSystem {
 
                         // if there's more replications than nutrients available then we try again
                         if(n_replications > microhabitats[mh_index].getS()){
+                            n_tau_halves++;
                             tau_step/=2.;
                             continue whileloop;
 
@@ -133,6 +135,7 @@ public class BioSystem {
 
                         //if there's more deaths than live bacteria then we try again
                         if(n_deaths > n_alive){
+                            n_tau_halves++;
                             tau_step/=2.;
                             continue whileloop;
                         }else{
@@ -144,14 +147,22 @@ public class BioSystem {
 
                     ////////// migrations ////////
                     // here we only sample from the population that remains alive
-                    int n_migrations = new PoissonDistribution(Math.abs((n_alive-death_allocations[mh_index])*microhabitats[mh_index].migration_rate()*tau_step)).sample();
+                    if(n_alive-death_allocations[mh_index] == 0) migration_allocations[mh_index] = 0;
+                    else {
+                        //System.out.println("n_alive : "+n_alive);
+                        //System.out.println("gRate: "+microhabitats[mh_index].replication_or_death_rate());
+                        //System.out.println("S:" +microhabitats[mh_index].getS());
+                        int n_migrations = new PoissonDistribution(Math.abs((double)(n_alive - death_allocations[mh_index])*microhabitats[mh_index].migration_rate()*tau_step)).sample();
 
-                    // if the no. of migrations is larger than the sampled pop then try again
-                    if(n_migrations > (n_alive - death_allocations[mh_index])){
-                        tau_step /= 2.;
-                        continue whileloop;
+                        // if the no. of migrations is larger than the sampled pop then try again
+                        if(n_migrations > (n_alive - death_allocations[mh_index])) {
+                            n_tau_halves++;
+                            tau_step /= 2.;
+                            continue whileloop;
+                        } else {
+                            migration_allocations[mh_index] = n_migrations;
+                        }
                     }
-
                 }
             }
             break whileloop;
@@ -191,14 +202,14 @@ public class BioSystem {
     public static void expGrad_popAndgRateDistbs(double input_alpha){
         long startTime = System.currentTimeMillis();
         int L = 500, S = 500;
-        int nSamples = 20, nReps = 32;
+        int nSamples = 20, nReps = 4;
 
-        double duration = 200., interval = duration/(double)nSamples;
+        double duration = 200.;
 
         String directory_name = "results";
-        String filename_alive = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"alive-distb";
-        String filename_dead = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"dead-distb";
-        String filename_gRate = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"gRate-distb";
+        String filename_alive = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-alive-distb";
+        String filename_dead = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-dead-distb";
+        String filename_gRate = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-gRate-distb";
 
         Databox[] databoxes = new Databox[nReps];
 
@@ -233,7 +244,7 @@ public class BioSystem {
         while(bs.time_elapsed <= duration+0.2*interval){
 
             if(bs.time_elapsed%interval < 0.01 && !alreadyRecorded){
-                System.out.println("rep: "+i+"\tt: "+bs.time_elapsed);
+                System.out.println("rep: "+i+"\tt: "+bs.time_elapsed+"\ttau halves: "+bs.n_tau_halves);
                 t_vals[sampleCounter] = bs.time_elapsed;
                 alive_distbs[sampleCounter] = bs.getLiveSpatialDistributionArray();
                 dead_distbs[sampleCounter] = bs.getDeadSpatialDistributionArray();

@@ -52,7 +52,7 @@ public class Microhabitat {
     public void fillWithWildType(int N){N_alive+=N;}
 
     public void addNBacteria(int N){N_alive+=N;}
-    public void removeNBacteria(int N){N_alive+=N;}
+    public void removeNBacteria(int N){N_alive-=N;}
 
     public void replicateNBacteria(int N){
         N_alive += N;
