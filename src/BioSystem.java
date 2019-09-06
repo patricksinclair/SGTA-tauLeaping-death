@@ -174,7 +174,7 @@ public class BioSystem {
             //births
             microhabitats[i].replicateNBacteria(replication_allocations[i]);
             //deaths
-            microhabitats[i].removeNBacteria(death_allocations[i]);
+            microhabitats[i].killNBacteria(death_allocations[i]);
             //migrations
             if(migration_allocations[i] > 0){
                 if(i==0){
