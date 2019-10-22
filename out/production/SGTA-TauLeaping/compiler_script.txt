@@ -1,0 +1,3 @@
+#!/bin/bash
+javac -cp ".:java_jars/*" *.java
+nohup java -cp ".:java_jars/*" SGTAMain &> nutrients_log.out&

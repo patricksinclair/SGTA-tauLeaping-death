@@ -6,6 +6,8 @@ import java.util.stream.IntStream;
 
 public class BioSystem {
 
+
+
     private int L, S, S_max;
     private double alpha, time_elapsed;
 
@@ -99,68 +101,47 @@ public class BioSystem {
                 int n_alive = microhabitats[mh_index].getN_alive();
                 original_popsizes[mh_index] = n_alive;
 
-                // if there's no bacteria in the microhabitat, then no events are assigned
-                if(n_alive==0){
-                    replication_allocations[mh_index] = 0;
-                    death_allocations[mh_index] = 0;
-                    migration_allocations[mh_index] = 0;
-
-                }else{
-                    ///// replications and deaths ////////
+                if(n_alive > 0){
                     double g_or_d_rate = microhabitats[mh_index].replication_or_death_rate();
 
-                    if(g_or_d_rate == 0.){
-                        replication_allocations[mh_index] = 0;
-                        death_allocations[mh_index] = 0;
+                    ///REPLICATION ////////
+                    if(g_or_d_rate > 0.){
+                        PoissonDistribution poiss_replication = new PoissonDistribution(n_alive*g_or_d_rate*tau_step);
+                        poiss_replication.reseedRandomGenerator(rand.nextLong());
+                        replication_allocations[mh_index] = poiss_replication.sample();
 
-                        //positive phic means growth
-                    }else if(g_or_d_rate > 0){
-
-                        int n_replications = new PoissonDistribution(Math.abs(n_alive*g_or_d_rate*tau_step)).sample();
-
-                        // if there's more replications than nutrients available then we try again
-                        if(n_replications > microhabitats[mh_index].getS()){
+                        //if there's more replications than nutrients then we try again
+                        if(replication_allocations[mh_index] > microhabitats[mh_index].getS()){
                             n_tau_halves++;
                             tau_step/=2.;
                             continue whileloop;
-
-                        }else{
-                            replication_allocations[mh_index] = n_replications;
-                            death_allocations[mh_index] = 0;
                         }
+                    ///DEATH ////////
+                    }else if(g_or_d_rate < 0.){
+                        PoissonDistribution poiss_death = new PoissonDistribution(n_alive*Math.abs(g_or_d_rate)*tau_step);
+                        poiss_death.reseedRandomGenerator(rand.nextLong());
+                        death_allocations[mh_index] = poiss_death.sample();
 
-                        //negative phic means death
-                    }else{
-                        int n_deaths = new PoissonDistribution(Math.abs(n_alive*g_or_d_rate*tau_step)).sample();
-
-                        //if there's more deaths than live bacteria then we try again
-                        if(n_deaths > n_alive){
+                        //if more deaths than live bacteria, we try again
+                        if(death_allocations[mh_index] > n_alive){
                             n_tau_halves++;
                             tau_step/=2.;
                             continue whileloop;
-                        }else{
-                            replication_allocations[mh_index] = 0;
-                            death_allocations[mh_index] = n_deaths;
                         }
                     }
-                    /////////////////////////////////////////////////
 
-                    ////////// migrations ////////
-                    // here we only sample from the population that remains alive
-                    if(n_alive-death_allocations[mh_index] == 0) migration_allocations[mh_index] = 0;
-                    else {
-                        //System.out.println("n_alive : "+n_alive);
-                        //System.out.println("gRate: "+microhabitats[mh_index].replication_or_death_rate());
-                        //System.out.println("S:" +microhabitats[mh_index].getS());
-                        int n_migrations = new PoissonDistribution(Math.abs((double)(n_alive - death_allocations[mh_index])*microhabitats[mh_index].migration_rate()*tau_step)).sample();
+                    //// MIGRATIONS /////
+                    //only sample from remaining live population
+                    if(n_alive - death_allocations[mh_index] > 0){
+                        PoissonDistribution poiss_migration = new PoissonDistribution((n_alive - death_allocations[mh_index])*microhabitats[mh_index].migration_rate()*tau_step);
+                        poiss_migration.reseedRandomGenerator(rand.nextLong());
+                        migration_allocations[mh_index] = poiss_migration.sample();
 
-                        // if the no. of migrations is larger than the sampled pop then try again
-                        if(n_migrations > (n_alive - death_allocations[mh_index])) {
+                        //if no. of migrations > live population then try again
+                        if(migration_allocations[mh_index] > (n_alive-death_allocations[mh_index])){
                             n_tau_halves++;
-                            tau_step /= 2.;
+                            tau_step/=2.;
                             continue whileloop;
-                        } else {
-                            migration_allocations[mh_index] = n_migrations;
                         }
                     }
                 }
@@ -207,9 +188,9 @@ public class BioSystem {
         double duration = 1000.;
 
         String directory_name = "results";
-        String filename_alive = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-alive-distb";
-        String filename_dead = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-dead-distb";
-        String filename_gRate = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-gRate-distb";
+        String filename_alive = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-alive-distb-RESEEDED";
+        String filename_dead = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-dead-distb-RESEEDED";
+        String filename_gRate = "SGTA-death-alpha="+String.format("%.6f", input_alpha)+"-gRate-distb-RESEEDED";
 
         Databox[] databoxes = new Databox[nReps];
 
